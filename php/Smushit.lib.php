@@ -38,7 +38,7 @@ class Smushit {
             $convertGif = $this->config['operation']['convert_gif'];
         }
         $this->convertGif = (boolean) $convertGif;
-        $this->host = $this->config['path']['smush-host'];
+        $this->host = $this->config['path']['host'];
     }
 
     //Create a duplicate files?
@@ -271,8 +271,8 @@ class Smushit {
      * Optimize png images
      */
 
-    function crush($filename, $already_in_smush = false) {
-        $dest = ($already_in_smush) ? $this->noDupes($filename) : $this->dest;
+    function crush($filename, $already_in = false) {
+        $dest = ($already_in) ? $this->noDupes($filename) : $this->dest;
         if ($dest === -1) {
             return false;
         }
