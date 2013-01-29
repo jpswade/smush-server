@@ -398,7 +398,7 @@ class Smushit {
 
     function getDirectoryListing($dir) {
         if (!is_dir($dir)) {
-            return "Not a directory";
+            return array('error', 'Not a directory');
         }
         $files = array();
         if ($dh = opendir($dir)) {
@@ -450,9 +450,7 @@ class Smushit {
      */
 
     function getGifInfo($gifPic) {
-        $ret = $this->exec('gifcolors', array(
-            'src' => $gifPic,
-                ));
+        $ret = $this->exec('gifcolors', array('src' => $gifPic));
         $totalColors = 0;
         foreach ($ret as $retStr) {
             //$retStr = $ret[0];
