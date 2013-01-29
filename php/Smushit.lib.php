@@ -234,7 +234,6 @@ class Smushit {
             $retType .= strtolower($fType);
         }
         return $retType;
-        return false;
     }
 
     /*
