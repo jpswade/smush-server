@@ -1,11 +1,15 @@
 <?php
 
+/* Required */
 require('Smushit.lib.php');
 
+/* Variables */
 $response = array();
 $img = urldecode($_GET['img']);
 $fileInfo = $_FILES['files'];
+$prefix = 'smush-';
 
+/* Logic */
 if (!$img && ($fileInfo == NULL || $fileInfo['error'] != NULL)) {
     $response['code'] = 400;
     $response['error'] = 'no file upload';
@@ -29,7 +33,7 @@ if (!$img && ($fileInfo == NULL || $fileInfo['error'] != NULL)) {
                 $filename = $filename . '.png';
             }
 
-            $file = uniqid('att-') . '-' . $filename;
+            $file = uniqid($prefix) . '-' . $filename;
             $filepath = 'upload/' . $file;
             $res = copy($img, $filepath);
         } else {
@@ -41,7 +45,7 @@ if (!$img && ($fileInfo == NULL || $fileInfo['error'] != NULL)) {
     } else {
         $fileType = $fileInfo['type'];
         $fileTemp = $fileInfo['tmp_name'];
-        $file = uniqid('att-') . '-' . $fileInfo['name'];
+        $file = uniqid($prefix) . '-' . $fileInfo['name'];
         $filepath = 'upload/' . $file;
         $res = move_uploaded_file($fileTemp, $filepath);
     }
