@@ -8,6 +8,8 @@ $response = array();
 $img = urldecode($_GET['img']);
 $fileInfo = $_FILES['files'];
 $prefix = 'smush-';
+$uploadpath = 'upload';
+$uploadpath = 'download';
 
 /* Logic */
 if (!$img && ($fileInfo == NULL || $fileInfo['error'] != NULL)) {
@@ -34,7 +36,7 @@ if (!$img && ($fileInfo == NULL || $fileInfo['error'] != NULL)) {
             }
 
             $file = uniqid($prefix) . '-' . $filename;
-            $filepath = 'upload/' . $file;
+            $filepath = $uploadpath . DIRECTORY_SEPARATOR . $file;
             $res = copy($img, $filepath);
         } else {
             $response['code'] = 400;
@@ -46,7 +48,7 @@ if (!$img && ($fileInfo == NULL || $fileInfo['error'] != NULL)) {
         $fileType = $fileInfo['type'];
         $fileTemp = $fileInfo['tmp_name'];
         $file = uniqid($prefix) . '-' . $fileInfo['name'];
-        $filepath = 'upload/' . $file;
+        $filepath = $uploadpath . DIRECTORY_SEPARATOR . $file;
         $res = move_uploaded_file($fileTemp, $filepath);
     }
 
@@ -55,7 +57,8 @@ if (!$img && ($fileInfo == NULL || $fileInfo['error'] != NULL)) {
         $response['error'] = 'error occur while save file';
     } else {
 
-        $response = $smushit->optimize($filepath, 'download/' . $file);
+        $path = $downloadpath . DIRECTORY_SEPARATOR;
+        $response = $smushit->optimize($filepath, $path . $file);
 
         if ($response['error'] != NULL) {
             $response['code'] = 500;
@@ -69,3 +72,4 @@ if (!$img && ($fileInfo == NULL || $fileInfo['error'] != NULL)) {
     }
 }
 echo json_encode($response);
+//eof
