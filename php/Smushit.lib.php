@@ -1,15 +1,17 @@
 <?php
+
 //According to the server operating system, defined directory delimiter constant
 if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-	define('SMUSH_OS_SLASH', '\\');
-}
-else {
+    define('SMUSH_OS_SLASH', '\\');
+} else {
     define('SMUSH_OS_SLASH', '/');
 }
 /*
- *Smushit class
+ * Smushit class
  */
+
 class Smushit {
+
     var $config = array();
     var $debug = false;
     var $dbg = array();
@@ -19,31 +21,31 @@ class Smushit {
     /* Structure
      * Completion of some initialization parameters
      */
+
     function Smushit($conf = false, $convertGif = null) {
         //Read the default config file
         if (!$conf) {
-        /*
-         * __FILE__For the current PHP script where the path + file name
-         * dirname(__FILE__)Returns the current PHP script where the path
-         * $conf config file path for the current path + file name
-         */
+            /*
+             * __FILE__For the current PHP script where the path + file name
+             * dirname(__FILE__)Returns the current PHP script where the path
+             * $conf config file path for the current path + file name
+             */
             $conf = dirname(__FILE__) . SMUSH_OS_SLASH . 'config.ini';
         }
         ////To obtain ini file multidimensional array
         $this->config = @parse_ini_file($conf, true);
         //Whether debug
         $this->debug = (strcasecmp($this->config['debug']['enabled'], "yes") == 0);
-		    $this->target = $target;
+        $this->target = $target;
 
         //this-> convertGif defaults to true
-		if(null === $convertGif) {
-			$this->convertGif = (boolean)$this->config['operation']['convert_gif'];
-		} else {
-			$this->convertGif = (boolean)$convertGif;
-		}
-		$this->host = $this->config['path']['smush-host'];
+        if (null === $convertGif) {
+            $this->convertGif = (boolean) $this->config['operation']['convert_gif'];
+        } else {
+            $this->convertGif = (boolean) $convertGif;
+        }
+        $this->host = $this->config['path']['smush-host'];
     }
-
 
     //Create a duplicate files?
     function noDupes($dest) {
@@ -51,16 +53,16 @@ class Smushit {
         // 256 is a cool number, no special reason to picking it, just making
         // sure we don't get extremely long filenames
         if (strlen($dest) > 256) {
-            $dest = dirname($dest) .  SMUSH_OS_SLASH . substr(md5($dest), 0, 8);
+            $dest = dirname($dest) . SMUSH_OS_SLASH . substr(md5($dest), 0, 8);
         }
 
         $i = 1;
         $orig = $dest;
 
         while (file_exists($dest)) {
-          // -4 is where the extension is, if exists
-          // if not a normal extension, what the hell matters
-          $dest = substr_replace($orig, $i++, -4, -4);
+            // -4 is where the extension is, if exists
+            // if not a normal extension, what the hell matters
+            $dest = substr_replace($orig, $i++, -4, -4);
         }
         return $dest;
     }
@@ -68,24 +70,25 @@ class Smushit {
     /*
      * To optimize picture file, and returns the array of data before and after optimization
      */
+
     function optimize($filename, $output) {
-		$this->dest = $output;
+        $this->dest = $output;
         //File Size
         $src_size = filesize($filename);
         if (!$src_size) {
             return array(
-			  'error' => 'Error reading the input file'
-			);
+                'error' => 'Error reading the input file'
+            );
         }
         //File Type
         $type = $this->getType($filename);
-		
+
         // gif animations return one "gif" for every frame
         if (substr($type, 0, 6) === 'gifgif') {
             $type = 'gifgif';
         }
         if ('gif' === $type && false === $this->convertGif) {
-          $type = 'gifgif';
+            $type = 'gifgif';
         }
         $dest = '';
         /*
@@ -99,43 +102,43 @@ class Smushit {
                 break;
             case 'gif':
             case 'bmp': // yeah, I know!
-              //Create a png file of the same name
-              $png  = $this->toPNG($filename);
-              if (!$png) {
-                  return array('error' => 'Failed to convert '.$type.' file to png format.');
-              }
-              //Need to create excessive alternative png image
-              $dest = $this->crush($png, true);
-              //? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
-              //If the transition png file converted to the target gif file
-				/**
-				 * do not delete the mid-file to increase the performance.
-                unlink($png);
-                rename($dest, $png);
-                $dest = $png;
-				*/
+                //Create a png file of the same name
+                $png = $this->toPNG($filename);
+                if (!$png) {
+                    return array('error' => 'Failed to convert ' . $type . ' file to png format.');
+                }
+                //Need to create excessive alternative png image
+                $dest = $this->crush($png, true);
+                //? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
+                //If the transition png file converted to the target gif file
+                /**
+                 * do not delete the mid-file to increase the performance.
+                  unlink($png);
+                  rename($dest, $png);
+                  $dest = $png;
+                 */
                 break;
-                //Dynamic File
+            //Dynamic File
             case 'gifgif':
-              //Get color value
-              $gifColors = $this->getGifInfo($filename);
-              //The progressive image optimization, color values ​​greater than 256 additional color values ​​to optimize
-              $dest = (256 < $gifColors) ? $this->gifsicle($filename, true) : $this->gifsicle($filename);
-              break;
+                //Get color value
+                $gifColors = $this->getGifInfo($filename);
+                //The progressive image optimization, color values ​​greater than 256 additional color values ​​to optimize
+                $dest = (256 < $gifColors) ? $this->gifsicle($filename, true) : $this->gifsicle($filename);
+                break;
             case 'png':
-              //Optimize PNG images
-              $dest = $this->crush($filename);
-              break;
+                //Optimize PNG images
+                $dest = $this->crush($filename);
+                break;
             case '':
-                return array('error'=>'Cannot determine the type, is this an image?');
+                return array('error' => 'Cannot determine the type, is this an image?');
                 break;
             default:
-                return array('error'=>'Cannot do anythig about this file type:' . $type);
+                return array('error' => 'Cannot do anythig about this file type:' . $type);
         }
         //The optimized picture file size
         $dest_size = filesize($dest);
         if (!$dest_size) {
-            return array('error'=>'Error writing the optimized file');
+            return array('error' => 'Error writing the optimized file');
         }
         //Optimize the size of the percentage
         $percent = 100 * ($src_size - $dest_size) / $src_size;
@@ -143,7 +146,7 @@ class Smushit {
 
         $result = array(
             'src' => $this->host . $filename,
-            'src_size' =>  $src_size,
+            'src_size' => $src_size,
             'dest' => $this->host . $dest,
             'dest_size' => $dest_size,
             'percent' => $percent,
@@ -157,13 +160,14 @@ class Smushit {
      *  the incoming parameters, assembled the results of the command line, 
      * and return to the implementation of the command.
      */
+
     private function exec($command_name, $data) {
-      /* 
-       * 0 => %test_home%
-       * 1 => %yunying%
-       */
+        /*
+         * 0 => %test_home%
+         * 1 => %yunying%
+         */
         $find = array_keys($this->config['path']);
-        foreach($find as $k=>$v) {
+        foreach ($find as $k => $v) {
             $find[$k] = "%$v%";
         }
         //Get the list of commands in the configuration file
@@ -175,14 +179,14 @@ class Smushit {
          * Incoming $ data parameter instead of the default placeholder in the command list
          */
         $find = array_keys($data);
-        foreach($find as $k=>$v) {
+        foreach ($find as $k => $v) {
             $find[$k] = "%$v%";
         }
 
         //Safe handling
         $data = array_map('escapeshellarg', $data);
         $command = str_replace($find, $data, $command);
-		
+
 
         //error_log($command);
         exec($command, $ret, $status);
@@ -203,24 +207,25 @@ class Smushit {
         //Return all perform output
         return $ret;
     }
-    
+
     /*
      * Get the type of file
      */
+
     function getType($filename) {
         $ret = $this->exec('identify', array('src' => $filename));
-		$retType = "";
-		if ($ret !== -1 && !empty($ret[0])) {
-			foreach($ret as $retStr) {
-			//	$retStr = $ret[0];
-      //Or two spaces between the content, can be understood as the spaces before and after cleanup
-				$beginPos = strpos($retStr, " ");
-				$endPos = strpos($retStr, " ", $beginPos + 1);
-				$fType = substr($retStr, $beginPos + 1, $endPos - $beginPos - 1);
-        //Converted to lowercase
-				$retType .= strtolower($fType);
-			}
-			return $retType;
+        $retType = "";
+        if ($ret !== -1 && !empty($ret[0])) {
+            foreach ($ret as $retStr) {
+                //	$retStr = $ret[0];
+                //Or two spaces between the content, can be understood as the spaces before and after cleanup
+                $beginPos = strpos($retStr, " ");
+                $endPos = strpos($retStr, " ", $beginPos + 1);
+                $fType = substr($retStr, $beginPos + 1, $endPos - $beginPos - 1);
+                //Converted to lowercase
+                $retType .= strtolower($fType);
+            }
+            return $retType;
         }
         return false;
     }
@@ -228,8 +233,9 @@ class Smushit {
     /*
      * According to the specified file to create a new png file (not optimized)
      */
+
     function toPNG($filename, $force8 = false) {
-      //Create a directory
+        //Create a directory
         $dest = $this->dest;
         if ($dest === -1) {
             return false;
@@ -245,8 +251,8 @@ class Smushit {
          */
         $ret = $this->exec($exec_which, array(
             'src' => $filename,
-            'dest'=> $dest
-           )
+            'dest' => $dest
+                )
         );
         if ($ret === -1) {
             return false;
@@ -257,6 +263,7 @@ class Smushit {
     /*
      * Optimize png images
      */
+
     function crush($filename, $already_in_smush = false) {
         $dest = ($already_in_smush) ? $this->noDupes($filename) : $this->dest;
         if ($dest === -1) {
@@ -266,8 +273,8 @@ class Smushit {
         // execute the the pngcrush command line, returns processing files
         $ret = $this->exec('pngcrush', array(
             'src' => $filename,
-            'dest'=> $dest
-           )
+            'dest' => $dest
+                )
         );
         if ($ret === -1) {
             return false;
@@ -275,48 +282,49 @@ class Smushit {
         return $dest;
     }
 
-	function compress($filename, $rate) {
-		$res = $this->exec('compress', array(
-			'src' => $filename,
-			'dest' => $filename,
-			'rate' => $rate
-			));
-	}
+    function compress($filename, $rate) {
+        $res = $this->exec('compress', array(
+            'src' => $filename,
+            'dest' => $filename,
+            'rate' => $rate
+                ));
+    }
 
-	function crop($filename, $params) {
-		$res = $this->exec('crop', array(
-			'src' => $filename,
-			'dest' => $filename,
-			'params' => $params
-			));
-	}
+    function crop($filename, $params) {
+        $res = $this->exec('crop', array(
+            'src' => $filename,
+            'dest' => $filename,
+            'params' => $params
+                ));
+    }
 
     /*
      * Handling type jpg & jpeg files
      */
+
     function jpegtran($filename) {
         $dest = $this->dest;
         if ($dest === -1) {
             return false;
         }
 
-      /*
-       * Call exec method, based on the incoming parameters, perform the convert command line
-       * Create *. Tmp.jpeg new file
-       */
+        /*
+         * Call exec method, based on the incoming parameters, perform the convert command line
+         * Create *. Tmp.jpeg new file
+         */
         $ret = $this->exec('convert', array(
             'src' => $filename,
-            'dest'=> $filename . ".tmp.jpeg"
-           )
+            'dest' => $filename . ".tmp.jpeg"
+                )
         );
         if ($ret === -1) {
             return false;
         }
-      //New archive copy for the target file
+        //New archive copy for the target file
         $ret = $this->exec('jpegtran', array(
             'src' => $filename . ".tmp.jpeg",
-            'dest'=> $dest
-           )
+            'dest' => $dest
+                )
         );
         if ($ret === -1) {
             return false;
@@ -328,18 +336,19 @@ class Smushit {
      * Call exec method, according to the the incoming parameters perform gifsicle_reduce_color, or gifsicle command line
      * Need to optimize the getGifInfo method returns the color values ​​to decide whether the number of colors
      */
+
     function gifsicle($filename, $reduceColors = false) {
         $dest = $this->dest;
         if ($dest === -1) {
-          return false;
+            return false;
         }
         //Decided to call the command line based on the color values
         $cmd = $reduceColors ? "gifsicle_reduce_color" : "gifsicle";
 
         $ret = $this->exec($cmd, array(
             'src' => $filename,
-            'dest'=> $dest
-        ));
+            'dest' => $dest
+                ));
         if ($ret === -1) {
             return false;
         }
@@ -372,8 +381,7 @@ class Smushit {
                 return false;
             }
             return file_exists($dest);
-        }
-        else {
+        } else {
             return copy($src, $dest);
         }
     }
@@ -385,8 +393,9 @@ class Smushit {
         $files = array();
         if ($dh = opendir($dir)) {
             while (($file = readdir($dh)) !== false) {
-                if ($file == '.' || $file == '..') continue;
-                $file = trim($dir, SMUSH_OS_SLASH)  . SMUSH_OS_SLASH . $file;
+                if ($file == '.' || $file == '..')
+                    continue;
+                $file = trim($dir, SMUSH_OS_SLASH) . SMUSH_OS_SLASH . $file;
                 if (is_dir($file)) {
                     continue;
                 }
@@ -397,8 +406,7 @@ class Smushit {
         return $files;
     }
 
-    function isTheSameImage($file1, $file2)
-    {
+    function isTheSameImage($file1, $file2) {
         $i1 = imagecreatefromstring(file_get_contents($file1));
         $i2 = imagecreatefromstring(file_get_contents($file2));
 
@@ -425,23 +433,26 @@ class Smushit {
         }
         return true;
     }
-  /*
-   * Obtain the the gif image's color values​​, and returns
-   */
-	function getGifInfo($gifPic)
-	{
-		$ret = $this->exec("gifcolors", array(
-			"src" => $gifPic,
-		));
-		$totalColors = 0;
-		foreach($ret as $retStr) {
-			//$retStr = $ret[0];
-			$beginPos = strpos($retStr, "[");
-			$endPos = strpos($retStr, "]");
-			$colorNum = (int)substr($retStr, $beginPos + 1, $endPos - $beginPos - 1);
-			$totalColors += $colorNum;
-		}
-		return $totalColors;
-	}
+
+    /*
+     * Obtain the the gif image's color values​​, and returns
+     */
+
+    function getGifInfo($gifPic) {
+        $ret = $this->exec("gifcolors", array(
+            "src" => $gifPic,
+                ));
+        $totalColors = 0;
+        foreach ($ret as $retStr) {
+            //$retStr = $ret[0];
+            $beginPos = strpos($retStr, "[");
+            $endPos = strpos($retStr, "]");
+            $colorNum = (int) substr($retStr, $beginPos + 1, $endPos - $beginPos - 1);
+            $totalColors += $colorNum;
+        }
+        return $totalColors;
+    }
+
 }
+
 //eof
