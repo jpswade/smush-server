@@ -1,5 +1,5 @@
 <?php
-//根据服务器操作系统，定义目录分隔符常量
+//According to the server operating system, defined directory delimiter constant
 if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
 	define('SMUSH_OS_SLASH', '\\');
 }
@@ -7,7 +7,7 @@ else {
     define('SMUSH_OS_SLASH', '/');
 }
 /*
- *Smushit类定义
+ *Smushit class
  */
 class Smushit {
     var $config = array();
@@ -16,26 +16,26 @@ class Smushit {
     var $last_status = '';
     var $last_command = '';
 
-    /* 构造
-     * 完成一些参数的初始化
+    /* Structure
+     * Completion of some initialization parameters
      */
     function Smushit($conf = false, $convertGif = null) {
-        //读取默认的config.ini文件
+        //Read the default config file
         if (!$conf) {
         /*
-         * __FILE__为当前PHP脚本所在路径 + 文件名
-         * dirname(__FILE__)返回当前PHP脚本所在路径
-         * $conf为当前路径下的config文件路径 + 文件名
+         * __FILE__For the current PHP script where the path + file name
+         * dirname(__FILE__)Returns the current PHP script where the path
+         * $conf config file path for the current path + file name
          */
             $conf = dirname(__FILE__) . SMUSH_OS_SLASH . 'config.ini';
         }
-        //获取ini文件的多维数组
+        ////To obtain ini file multidimensional array
         $this->config = @parse_ini_file($conf, true);
-        //是否debug
+        //Whether debug
         $this->debug = (strcasecmp($this->config['debug']['enabled'], "yes") == 0);
 		    $this->target = $target;
 
-        //this->convertGif默认为true
+        //this-> convertGif defaults to true
 		if(null === $convertGif) {
 			$this->convertGif = (boolean)$this->config['operation']['convert_gif'];
 		} else {
@@ -45,11 +45,12 @@ class Smushit {
     }
 
 
-    //创建出一个不重复的文件？
+    //Create a duplicate files?
     function noDupes($dest) {
 
-        if (strlen($dest) > 256) { // 256 is a cool number, no special reason to picking it, just making
-                                   // sure we don't get extremely long filenames
+        // 256 is a cool number, no special reason to picking it, just making
+        // sure we don't get extremely long filenames
+        if (strlen($dest) > 256) {
             $dest = dirname($dest) .  SMUSH_OS_SLASH . substr(md5($dest), 0, 8);
         }
 
@@ -57,25 +58,26 @@ class Smushit {
         $orig = $dest;
 
         while (file_exists($dest)) {
-          $dest = substr_replace($orig, $i++, -4, -4); // -4 is where the extension is, if exists
-                                                       // if not a normal extension, what the hell matters
+          // -4 is where the extension is, if exists
+          // if not a normal extension, what the hell matters
+          $dest = substr_replace($orig, $i++, -4, -4);
         }
         return $dest;
     }
 
     /*
-     * 优化图片文件，并返回优化前后的数据数组
+     * To optimize picture file, and returns the array of data before and after optimization
      */
     function optimize($filename, $output) {
 		$this->dest = $output;
-        //文件大小
+        //File Size
         $src_size = filesize($filename);
         if (!$src_size) {
             return array(
 			  'error' => 'Error reading the input file'
 			);
         }
-        //文件类型
+        //File Type
         $type = $this->getType($filename);
 		
         // gif animations return one "gif" for every frame
@@ -87,7 +89,7 @@ class Smushit {
         }
         $dest = '';
         /*
-         * 分为4个文件类型处理
+         * Document Type processing is divided into four
          * jpg&jpeg、gif&bmp、gifgif、png
          */
         switch ($type) {
@@ -97,14 +99,15 @@ class Smushit {
                 break;
             case 'gif':
             case 'bmp': // yeah, I know!
-              //创建出一个同名png文件
+              //Create a png file of the same name
               $png  = $this->toPNG($filename);
               if (!$png) {
                   return array('error' => 'Failed to convert '.$type.' file to png format.');
               }
-              //需要创建过度的替代的png图片
+              //Need to create excessive alternative png image
               $dest = $this->crush($png, true);
-              //？？？？？？？？？？？？？？？？？？？？？？？？？如果将过渡的png文件转换为目标gif文件
+              //? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
+              //If the transition png file converted to the target gif file
 				/**
 				 * do not delete the mid-file to increase the performance.
                 unlink($png);
@@ -112,15 +115,15 @@ class Smushit {
                 $dest = $png;
 				*/
                 break;
-                //动态文件
+                //Dynamic File
             case 'gifgif':
-              //获取颜色值
+              //Get color value
               $gifColors = $this->getGifInfo($filename);
-              //进行图片优化，颜色值大于256时附加颜色值优化
+              //The progressive image optimization, color values ​​greater than 256 additional color values ​​to optimize
               $dest = (256 < $gifColors) ? $this->gifsicle($filename, true) : $this->gifsicle($filename);
               break;
             case 'png':
-              //优化PNG图片
+              //Optimize PNG images
               $dest = $this->crush($filename);
               break;
             case '':
@@ -129,12 +132,12 @@ class Smushit {
             default:
                 return array('error'=>'Cannot do anythig about this file type:' . $type);
         }
-        //优化后的图片文件大小
+        //The optimized picture file size
         $dest_size = filesize($dest);
         if (!$dest_size) {
             return array('error'=>'Error writing the optimized file');
         }
-        //优化的大小百分比
+        //Optimize the size of the percentage
         $percent = 100 * ($src_size - $dest_size) / $src_size;
         $percent = number_format($percent, 2);
 
@@ -150,7 +153,9 @@ class Smushit {
     }
 
     /*
-     * 通过config.ini配置文件中的命令行和传入的参数，拼装出命令行执行，并返回执行的命令结果
+     * Through the the config.ini configuration files in the command line and
+     *  the incoming parameters, assembled the results of the command line, 
+     * and return to the implementation of the command.
      */
     private function exec($command_name, $data) {
       /* 
@@ -161,30 +166,30 @@ class Smushit {
         foreach($find as $k=>$v) {
             $find[$k] = "%$v%";
         }
-        //获取配置文件中的命令列表
+        //Get the list of commands in the configuration file
         $command = $this->config['command'][$command_name];
-        //在$command里查找$find中的值，并用$this->config['path']替换
+        //Find the value of $ find $ command and use $ this-> config ['path'] replace
         $command = str_replace($find, array_values($this->config['path']), $command);
 
         /*
-         * 用传入的$data参数来代替命令列表中的缺省占位符
+         * Incoming $ data parameter instead of the default placeholder in the command list
          */
         $find = array_keys($data);
         foreach($find as $k=>$v) {
             $find[$k] = "%$v%";
         }
 
-        //安全处理
+        //Safe handling
         $data = array_map('escapeshellarg', $data);
         $command = str_replace($find, $data, $command);
 		
 
         //error_log($command);
         exec($command, $ret, $status);
-        //执行后的状态码、命令行
+        //Status code after execution, command line
         $this->last_status = $status;
         $this->last_command = $command;
-        //debug模式
+        //debug mode
         if ($this->debug) {
             $this->dbg[] = array(
                 'command' => $command,
@@ -195,12 +200,12 @@ class Smushit {
         if ($status == 1) {
             return -1;
         }
-        //返回所有执行输出
+        //Return all perform output
         return $ret;
     }
     
     /*
-     * 获取文件的类型
+     * Get the type of file
      */
     function getType($filename) {
         $ret = $this->exec('identify', array('src' => $filename));
@@ -208,11 +213,11 @@ class Smushit {
 		if ($ret !== -1 && !empty($ret[0])) {
 			foreach($ret as $retStr) {
 			//	$retStr = $ret[0];
-      //或者两个空格之间的内容，即可理解为前后空格清除吧
+      //Or two spaces between the content, can be understood as the spaces before and after cleanup
 				$beginPos = strpos($retStr, " ");
 				$endPos = strpos($retStr, " ", $beginPos + 1);
 				$fType = substr($retStr, $beginPos + 1, $endPos - $beginPos - 1);
-        //转换为小写
+        //Converted to lowercase
 				$retType .= strtolower($fType);
 			}
 			return $retType;
@@ -221,21 +226,22 @@ class Smushit {
     }
 
     /*
-     * 根据指定的文件创建出新png文件（不是优化）
+     * According to the specified file to create a new png file (not optimized)
      */
     function toPNG($filename, $force8 = false) {
-      //创建出相关的目录
+      //Create a directory
         $dest = $this->dest;
         if ($dest === -1) {
             return false;
         }
-        //目标转换为png文件
+        //Target png files
         $dest = str_replace(".gif", ".png", $dest);
-        //应该为‘topng’
+        //Should 'topng'
         $exec_which = $force8 ? 'topng8' : 'topng';
         /*
-         * 调用exec方法，根据传入的参数，执行topng命令行
-         * 根据gif或者bmp文件，创建同名的png新文件
+         * Call exec method, based on the parameters of the incoming
+         *  perform topng command line
+         * Create a new file of the same name png gif or bmp file
          */
         $ret = $this->exec($exec_which, array(
             'src' => $filename,
@@ -249,14 +255,15 @@ class Smushit {
     }
 
     /*
-     * 优化png图片
+     * Optimize png images
      */
     function crush($filename, $already_in_smush = false) {
         $dest = ($already_in_smush) ? $this->noDupes($filename) : $this->dest;
         if ($dest === -1) {
             return false;
         }
-        //调用exec方法，根据传入的参数，执行pngcrush命令行，返回处理后的文件
+        //Call the exec method, based on incoming parameters,
+        // execute the the pngcrush command line, returns processing files
         $ret = $this->exec('pngcrush', array(
             'src' => $filename,
             'dest'=> $dest
@@ -285,7 +292,7 @@ class Smushit {
 	}
 
     /*
-     * 处理jpg&jpeg类型文件
+     * Handling type jpg & jpeg files
      */
     function jpegtran($filename) {
         $dest = $this->dest;
@@ -294,8 +301,8 @@ class Smushit {
         }
 
       /*
-       * 调用exec方法，根据传入的参数，执行convert命令行
-       * 创建*.tmp.jpeg的新文件
+       * Call exec method, based on the incoming parameters, perform the convert command line
+       * Create *. Tmp.jpeg new file
        */
         $ret = $this->exec('convert', array(
             'src' => $filename,
@@ -305,7 +312,7 @@ class Smushit {
         if ($ret === -1) {
             return false;
         }
-      //将新的压缩文件拷贝为目标文件
+      //New archive copy for the target file
         $ret = $this->exec('jpegtran', array(
             'src' => $filename . ".tmp.jpeg",
             'dest'=> $dest
@@ -318,15 +325,15 @@ class Smushit {
     }
 
     /*
-     * 调用exec方法，根据传入的参数，执行gifsicle_reduce_color或者gifsicle命令行
-     * 根据getGifInfo方法的返回颜色值决定是否需要优化颜色数
+     * Call exec method, according to the the incoming parameters perform gifsicle_reduce_color, or gifsicle command line
+     * Need to optimize the getGifInfo method returns the color values ​​to decide whether the number of colors
      */
     function gifsicle($filename, $reduceColors = false) {
         $dest = $this->dest;
         if ($dest === -1) {
           return false;
         }
-        //根据颜色值来决定调用的命令行
+        //Decided to call the command line based on the color values
         $cmd = $reduceColors ? "gifsicle_reduce_color" : "gifsicle";
 
         $ret = $this->exec($cmd, array(
@@ -419,7 +426,7 @@ class Smushit {
         return true;
     }
   /*
-   * 获取gif图片的颜色值，并返回
+   * Obtain the the gif image's color values​​, and returns
    */
 	function getGifInfo($gifPic)
 	{
@@ -437,4 +444,4 @@ class Smushit {
 		return $totalColors;
 	}
 }
-
+//eof
