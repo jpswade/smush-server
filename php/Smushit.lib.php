@@ -1,11 +1,5 @@
 <?php
 
-//According to the server operating system, defined directory delimiter constant
-if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-    define('SMUSH_OS_SLASH', '\\');
-} else {
-    define('SMUSH_OS_SLASH', '/');
-}
 /*
  * Smushit class
  */
@@ -30,7 +24,7 @@ class Smushit {
              * dirname(__FILE__)Returns the current PHP script where the path
              * $conf config file path for the current path + file name
              */
-            $conf = dirname(__FILE__) . SMUSH_OS_SLASH . 'config.ini';
+            $conf = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.ini';
         }
         ////To obtain ini file multidimensional array
         $this->config = @parse_ini_file($conf, true);
@@ -53,7 +47,7 @@ class Smushit {
         // 256 is a cool number, no special reason to picking it, just making
         // sure we don't get extremely long filenames
         if (strlen($dest) > 256) {
-            $dest = dirname($dest) . SMUSH_OS_SLASH . substr(md5($dest), 0, 8);
+            $dest = dirname($dest) . DIRECTORY_SEPARATOR . substr(md5($dest), 0, 8);
         }
 
         $i = 1;
@@ -395,7 +389,7 @@ class Smushit {
             while (($file = readdir($dh)) !== false) {
                 if ($file == '.' || $file == '..')
                     continue;
-                $file = trim($dir, SMUSH_OS_SLASH) . SMUSH_OS_SLASH . $file;
+                $file = trim($dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $file;
                 if (is_dir($file)) {
                     continue;
                 }
