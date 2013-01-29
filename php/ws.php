@@ -2,20 +2,6 @@
 
 require('Smushit.lib.php');
 
-function download_remote_file_with_curl($file_url, $save_to) {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_POST, 0);
-    curl_setopt($ch, CURLOPT_URL, $file_url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    $file_content = curl_exec($ch);
-    curl_close($ch);
-
-    $downloaded_file = fopen($save_to, 'w');
-    $ret = fwrite($downloaded_file, $file_content);
-    fclose($downloaded_file);
-    return $ret;
-}
-
 $response = array();
 $img = urldecode($_GET["img"]);
 $fileInfo = $_FILES["files"];
@@ -45,7 +31,7 @@ if (!$img && ($fileInfo == NULL || $fileInfo["error"] != NULL)) {
 
             $file = uniqid("att-") . "-" . $filename;
             $filepath = 'upload/' . $file;
-            $res = download_remote_file_with_curl($img, $filepath);
+            $res = copy($img, $filepath);
         } else {
             $response["code"] = 400;
             $response["error"] = "img paramter is invalid";
