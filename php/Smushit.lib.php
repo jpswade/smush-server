@@ -26,10 +26,10 @@ class Smushit {
              */
             $conf = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.ini';
         }
-        ////To obtain ini file multidimensional array
-        $this->config = @parse_ini_file($conf, true);
+        //To obtain ini file multidimensional array
+        $this->config = parse_ini_file($conf, true);
         //Whether debug
-        $this->debug = (strcasecmp($this->config['debug']['enabled'], "yes") == 0);
+        $this->debug = (strcasecmp($this->config['debug']['enabled'], 'yes') == 0);
         $this->target = $target;
 
         //this-> convertGif defaults to true
@@ -87,7 +87,7 @@ class Smushit {
         $dest = '';
         /*
          * Document Type processing is divided into four
-         * jpg&jpeg、gif&bmp、gifgif、png
+         *  jpg&jpeg、gif&bmp、gifgif、png
          */
         switch ($type) {
             case 'jpg':
@@ -99,11 +99,11 @@ class Smushit {
                 //Create a png file of the same name
                 $png = $this->toPNG($filename);
                 if (!$png) {
-                    return array('error' => 'Failed to convert ' . $type . ' file to png format.');
+                    $error = "Failed to convert '$type' file to png format.";
+                    return array('error' => $error);
                 }
                 //Need to create excessive alternative png image
                 $dest = $this->crush($png, true);
-                //? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ?
                 //If the transition png file converted to the target gif file
                 /**
                  * do not delete the mid-file to increase the performance.
@@ -116,18 +116,25 @@ class Smushit {
             case 'gifgif':
                 //Get color value
                 $gifColors = $this->getGifInfo($filename);
-                //The progressive image optimization, color values ​​greater than 256 additional color values ​​to optimize
-                $dest = (256 < $gifColors) ? $this->gifsicle($filename, true) : $this->gifsicle($filename);
+                //The progressive image optimization, color values ​​greater than
+                // 256 additional color values ​​to optimize.
+                if (256 < $gifColors) {
+                    $dest = $this->gifsicle($filename, true);
+                } else {
+                    $dest = $this->gifsicle($filename);
+                }
                 break;
             case 'png':
                 //Optimize PNG images
                 $dest = $this->crush($filename);
                 break;
             case '':
-                return array('error' => 'Cannot determine the type, is this an image?');
+                $error = 'Cannot determine the type, is this an image?';
+                return array('error' => $error);
                 break;
             default:
-                return array('error' => 'Cannot do anythig about this file type:' . $type);
+                $error = 'Cannot do anythig about this file type:' . $type;
+                return array('error' => $error);
         }
         //The optimized picture file size
         $dest_size = filesize($dest);
@@ -152,13 +159,13 @@ class Smushit {
     /*
      * Through the the config.ini configuration files in the command line and
      *  the incoming parameters, assembled the results of the command line, 
-     * and return to the implementation of the command.
+     *  and return to the implementation of the command.
      */
 
     private function exec($command_name, $data) {
         /*
          * 0 => %test_home%
-         * 1 => %yunying%
+         * 1 => %user%
          */
         $find = array_keys($this->config['path']);
         foreach ($find as $k => $v) {
@@ -166,11 +173,13 @@ class Smushit {
         }
         //Get the list of commands in the configuration file
         $command = $this->config['command'][$command_name];
-        //Find the value of $ find $ command and use $ this-> config ['path'] replace
-        $command = str_replace($find, array_values($this->config['path']), $command);
+        $values = array_values($this->config['path']);
+        //Find the value of $find $command, use $this->config ['path'] replace
+        $command = str_replace($find, $values, $command);
 
         /*
-         * Incoming $ data parameter instead of the default placeholder in the command list
+         * Incoming $data parameter instead of the default placeholder in the
+         *  command list
          */
         $find = array_keys($data);
         foreach ($find as $k => $v) {
@@ -180,7 +189,6 @@ class Smushit {
         //Safe handling
         $data = array_map('escapeshellarg', $data);
         $command = str_replace($find, $data, $command);
-
 
         //error_log($command);
         exec($command, $ret, $status);
@@ -208,13 +216,14 @@ class Smushit {
 
     function getType($filename) {
         $ret = $this->exec('identify', array('src' => $filename));
-        $retType = "";
+        $retType = '';
         if ($ret !== -1 && !empty($ret[0])) {
             foreach ($ret as $retStr) {
-                //	$retStr = $ret[0];
-                //Or two spaces between the content, can be understood as the spaces before and after cleanup
-                $beginPos = strpos($retStr, " ");
-                $endPos = strpos($retStr, " ", $beginPos + 1);
+                //$retStr = $ret[0];
+                //Or two spaces between the content, can be understood as the
+                // spaces before and after cleanup.
+                $beginPos = strpos($retStr, ' ');
+                $endPos = strpos($retStr, ' ', $beginPos + 1);
                 $fType = substr($retStr, $beginPos + 1, $endPos - $beginPos - 1);
                 //Converted to lowercase
                 $retType .= strtolower($fType);
@@ -235,7 +244,7 @@ class Smushit {
             return false;
         }
         //Target png files
-        $dest = str_replace(".gif", ".png", $dest);
+        $dest = str_replace('.gif', '.png', $dest);
         //Should 'topng'
         $exec_which = $force8 ? 'topng8' : 'topng';
         /*
@@ -303,12 +312,13 @@ class Smushit {
         }
 
         /*
-         * Call exec method, based on the incoming parameters, perform the convert command line
+         * Call exec method, based on the incoming parameters,
+         *  perform the convert command line.
          * Create *. Tmp.jpeg new file
          */
         $ret = $this->exec('convert', array(
             'src' => $filename,
-            'dest' => $filename . ".tmp.jpeg"
+            'dest' => $filename . '.tmp.jpeg'
                 )
         );
         if ($ret === -1) {
@@ -316,7 +326,7 @@ class Smushit {
         }
         //New archive copy for the target file
         $ret = $this->exec('jpegtran', array(
-            'src' => $filename . ".tmp.jpeg",
+            'src' => $filename . '.tmp.jpeg',
             'dest' => $dest
                 )
         );
@@ -327,8 +337,10 @@ class Smushit {
     }
 
     /*
-     * Call exec method, according to the the incoming parameters perform gifsicle_reduce_color, or gifsicle command line
-     * Need to optimize the getGifInfo method returns the color values ​​to decide whether the number of colors
+     * Call exec method, according to the the incoming parameters perform
+     *  gifsicle_reduce_color, or gifsicle command line.
+     * Need to optimize the getGifInfo method returns the color values ​​to decide
+     *  whether the number of colors.
      */
 
     function gifsicle($filename, $reduceColors = false) {
@@ -337,7 +349,7 @@ class Smushit {
             return false;
         }
         //Decided to call the command line based on the color values
-        $cmd = $reduceColors ? "gifsicle_reduce_color" : "gifsicle";
+        $cmd = $reduceColors ? 'gifsicle_reduce_color' : 'gifsicle';
 
         $ret = $this->exec($cmd, array(
             'src' => $filename,
@@ -367,7 +379,7 @@ class Smushit {
             $mimetype = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
             curl_close($ch);
             fclose($fp);
-            if (is_null($mimetype) || strncmp($mimetype, "image/", 6) !== 0) {
+            if (is_null($mimetype) || strncmp($mimetype, 'image/', 6) !== 0) {
                 // not an image
                 if (file_exists($dest)) {
                     unlink($dest);
@@ -389,7 +401,8 @@ class Smushit {
             while (($file = readdir($dh)) !== false) {
                 if ($file == '.' || $file == '..')
                     continue;
-                $file = trim($dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $file;
+                $path = trim($dir, DIRECTORY_SEPARATOR);
+                $file = $path . DIRECTORY_SEPARATOR . $file;
                 if (is_dir($file)) {
                     continue;
                 }
@@ -433,14 +446,14 @@ class Smushit {
      */
 
     function getGifInfo($gifPic) {
-        $ret = $this->exec("gifcolors", array(
-            "src" => $gifPic,
+        $ret = $this->exec('gifcolors', array(
+            'src' => $gifPic,
                 ));
         $totalColors = 0;
         foreach ($ret as $retStr) {
             //$retStr = $ret[0];
-            $beginPos = strpos($retStr, "[");
-            $endPos = strpos($retStr, "]");
+            $beginPos = strpos($retStr, '[');
+            $endPos = strpos($retStr, ']');
             $colorNum = (int) substr($retStr, $beginPos + 1, $endPos - $beginPos - 1);
             $totalColors += $colorNum;
         }
