@@ -28,16 +28,16 @@ class Smushit {
         }
         //To obtain ini file multidimensional array
         $this->config = parse_ini_file($conf, true);
-        //Whether debug
-        $this->debug = (strcasecmp($this->config['debug']['enabled'], 'yes') == 0);
+        //Whether to debug
+        $debug = $this->config['debug']['enabled'];
+        $this->debug = (strcasecmp($debug, 'yes') == 0);
         $this->target = $target;
 
         //this-> convertGif defaults to true
-        if (null === $convertGif) {
-            $this->convertGif = (boolean) $this->config['operation']['convert_gif'];
-        } else {
-            $this->convertGif = (boolean) $convertGif;
+        if ($convertGif === null) {
+            $convertGif = $this->config['operation']['convert_gif'];
         }
+        $this->convertGif = (boolean) $convertGif;
         $this->host = $this->config['path']['smush-host'];
     }
 
@@ -45,9 +45,10 @@ class Smushit {
     function noDupes($dest) {
 
         // 256 is a cool number, no special reason to picking it, just making
-        // sure we don't get extremely long filenames
+        //  sure we don't get extremely long filenames.
         if (strlen($dest) > 256) {
-            $dest = dirname($dest) . DIRECTORY_SEPARATOR . substr(md5($dest), 0, 8);
+            $path = dirname($dest);
+            $dest = $path . DIRECTORY_SEPARATOR . substr(md5($dest), 0, 8);
         }
 
         $i = 1;
@@ -62,7 +63,8 @@ class Smushit {
     }
 
     /*
-     * To optimize picture file, and returns the array of data before and after optimization
+     * To optimize picture file, and returns the array of data before and after
+     *  optimization.
      */
 
     function optimize($filename, $output) {
@@ -217,19 +219,21 @@ class Smushit {
     function getType($filename) {
         $ret = $this->exec('identify', array('src' => $filename));
         $retType = '';
-        if ($ret !== -1 && !empty($ret[0])) {
-            foreach ($ret as $retStr) {
-                //$retStr = $ret[0];
-                //Or two spaces between the content, can be understood as the
-                // spaces before and after cleanup.
-                $beginPos = strpos($retStr, ' ');
-                $endPos = strpos($retStr, ' ', $beginPos + 1);
-                $fType = substr($retStr, $beginPos + 1, $endPos - $beginPos - 1);
-                //Converted to lowercase
-                $retType .= strtolower($fType);
-            }
-            return $retType;
+        if (!($ret !== -1 && !empty($ret[0]))) {
+            return false;
         }
+        //if ($ret !== -1 && !empty($ret[0]))
+        foreach ($ret as $retStr) {
+            //$retStr = $ret[0];
+            //Or two spaces between the content, can be understood as the
+            // spaces before and after cleanup.
+            $beginPos = strpos($retStr, ' ');
+            $endPos = strpos($retStr, ' ', $beginPos + 1);
+            $fType = substr($retStr, $beginPos + 1, $endPos - $beginPos - 1);
+            //Converted to lowercase
+            $retType .= strtolower($fType);
+        }
+        return $retType;
         return false;
     }
 
@@ -454,7 +458,9 @@ class Smushit {
             //$retStr = $ret[0];
             $beginPos = strpos($retStr, '[');
             $endPos = strpos($retStr, ']');
-            $colorNum = (int) substr($retStr, $beginPos + 1, $endPos - $beginPos - 1);
+            $start = $beginPos + 1;
+            $length = $endPos - $beginPos - 1;
+            $colorNum = (int) substr($retStr, $start, $lenth);
             $totalColors += $colorNum;
         }
         return $totalColors;
