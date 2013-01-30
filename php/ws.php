@@ -37,7 +37,7 @@ if (!$img && ($fileInfo == NULL || $fileInfo['error'] != NULL)) {
 
             $file = uniqid($prefix) . '-' . $filename;
             $filepath = $uploadpath . DIRECTORY_SEPARATOR . $file;
-            $res = copy($img, $filepath);
+            $res = $smushit->copy($img, $filepath);
         } else {
             $response['code'] = 400;
             $response['error'] = 'img paramter is invalid';
