@@ -198,15 +198,15 @@ class Smushit {
          * 0 => %test_home%
          * 1 => %user%
          */
-        $find = array_keys($this->config['path']);
+        /*$find = array_keys($this->config['path']);
         foreach ($find as $k => $v) {
             $find[$k] = "%$v%";
-        }
+        }*/
         //Get the list of commands in the configuration file
         $command = $this->config['command'][$command_name];
-        $values = array_values($this->config['path']);
+        /*$values = array_values($this->config['path']);
         //Find the value of $find $command, use $this->config ['path'] replace
-        $command = str_replace($find, $values, $command);
+        $command = str_replace($find, $values, $command);*/
 
         /*
          * Incoming $data parameter instead of the default placeholder in the
@@ -394,13 +394,13 @@ class Smushit {
     }
 
     function copy($src, $dest) {
-        if (file_exists($src)) {
-            return copy($src, $dest);
+        if (is_uploaded_file($src)) {
+            move_uploaded_file($src, $dest);
         }
-        if (!strstr($src, 'http://') && !strstr($src, 'https://')) {
-            return false;
+        elseif (file_exists($src)) {
+            copy($src, $dest);
         }
-        if (function_exists('curl_init')) {
+        elseif (function_exists('curl_init')) {
             $ch = curl_init($src);
             $fp = fopen($dest, 'w');
             curl_setopt($ch, CURLOPT_FILE, $fp);
@@ -418,10 +418,10 @@ class Smushit {
                 }
                 return false;
             }
-            return file_exists($dest);
         } else {
-            return copy($src, $dest);
+            shell_exec(sprintf('wget -O %s %s 2>&1 1> /dev/null', $file, $url));
         }
+        return file_exists($dest);
     }
 
     function getDirectoryListing($dir) {
