@@ -4,7 +4,7 @@
 require('Smushit.lib.php');
 
 /* Variables */
-$response = array();
+$response = array('id' => null);
 $img = urldecode($_GET['img']);
 $fileInfo = $_FILES['files'];
 $prefix = 'smush-';
@@ -13,8 +13,7 @@ $uploadpath = 'download';
 
 /* Logic */
 if (!$img && ($fileInfo == NULL || $fileInfo['error'] != NULL)) {
-    $response['code'] = 400;
-    $response['error'] = 'no file upload';
+    $response['error'] = 'Need an ?img=';
 } else {
     $smushit = new Smushit();
 
