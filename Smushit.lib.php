@@ -26,7 +26,7 @@ class Smushit {
         'operation' => array('convert_gif' => true)
     );
     
-    var $debug = false;
+    var $debug = 1;
     var $dbg = array();
     var $last_status = '';
     var $last_command = '';
@@ -221,7 +221,9 @@ class Smushit {
         $data = array_map('escapeshellarg', $data);
         $command = str_replace($find, $data, $command);
 
-        //error_log($command);
+        if ($this->debug) {
+            //error_log($command);
+        }
         exec($command, $ret, $status);
         //Status code after execution, command line
         $this->last_status = $status;
