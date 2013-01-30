@@ -6,7 +6,30 @@
 
 class Smushit {
 
-    var $config = array();
+    var $config = array(
+        'results' => array('dir' => '%dir%%slash%results%slash%%file%'),
+        'debug' => array('enabled' => 'yes'),
+        'path' => array(
+                'home' => '/path/to/user/public_html',
+                'host' => 'http://example.com/smush.it/'
+            ),
+        'command' => array(
+            'identify' => 'identify %src%',
+            'convert' => 'convert %src% -quality 70 %dest%',
+            'jpegtran' => 'jpegtran -copy none -progressive -outfile %dest% %src%',
+            'gifsicle' => '/usr/local/bin/gifsicle -O2 %src% -o %dest%',
+            'gifsicle_reduce_color' => '/usr/local/bin/gifsicle --colors 256 -O2 %src% > %dest%',
+            'gifcolors' => "/usr/local/bin/gifsicle --color-info %src% | grep  'color table'",
+            'topng' => 'convert %src% %dest%',
+            'topng8' => 'convert %src% PNG8:%dest%',
+            'pngcrush' => '/usr/local/bin/pngcrush -rem alla -brute -reduce %src% %dest%',
+            'compress' => 'convert -sample %rate% %src% %dest%',
+            'crop' => 'convert %src% -crop %params% %dest%',
+            'env' => array(),
+        ),
+        'operation' => array('convert_gif' => true)
+    );
+    
     var $debug = false;
     var $dbg = array();
     var $last_status = '';
@@ -17,7 +40,9 @@ class Smushit {
      */
 
     function Smushit($conf = false, $convertGif = null) {
-        loadConfig($conf);
+        if ($conf) {
+            loadConfig($conf);
+        }
         //Whether to debug
         $debug = $this->config['debug']['enabled'];
         $this->debug = (strcasecmp($debug, 'yes') == 0);
@@ -31,9 +56,9 @@ class Smushit {
     }
     
     //Load config
-    function loadConfig ($conf = false) {
+    function loadConfig ($conf) {
         //Read the default config file
-        if (!$conf) {
+        if (!file_exists($conf)) {
             /*
              * __FILE__For the current PHP script where the path + file name
              * dirname(__FILE__)Returns the current PHP script where the path
@@ -41,8 +66,13 @@ class Smushit {
              */
             $conf = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.ini';
         }
+        if (!file_exists($conf)) {
+            return array('error', "Config file '$conf' does not exist.");
+            return false;
+        }
         //To obtain ini file multidimensional array
         $this->config = parse_ini_file($conf, true);
+        return true;
     }
 
     //Create a duplicate files?
