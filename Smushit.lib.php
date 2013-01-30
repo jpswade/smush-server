@@ -25,7 +25,7 @@ class Smushit {
             'pngcrush' => '/usr/local/bin/pngcrush -rem alla -brute -reduce %src% %dest%',
             'compress' => 'convert -sample %rate% %src% %dest%',
             'crop' => 'convert %src% -crop %params% %dest%',
-            'env' => array(),
+            'env' => array('ua' => 'Smushit'),
         ),
         'operation' => array('convert_gif' => true)
     );
@@ -123,7 +123,7 @@ class Smushit {
         $dest = '';
         /*
          * Document Type processing is divided into four
-         *  jpg&jpeg、gif&bmp、gifgif、png
+         *  jpg&jpeg,gif&bmp,gifgif,png.
          */
         switch ($type) {
             case 'jpg':
