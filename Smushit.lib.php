@@ -9,10 +9,6 @@ class Smushit {
     var $config = array(
         'results' => array('dir' => '%dir%%slash%results%slash%%file%'),
         'debug' => array('enabled' => 'yes'),
-        'path' => array(
-                'home' => '/path/to/user/public_html',
-                'host' => 'http://example.com/smush.it/'
-            ),
         'command' => array(
             'identify' => 'identify %src%',
             'convert' => 'convert %src% -quality 70 %dest%',
@@ -52,7 +48,6 @@ class Smushit {
             $convertGif = $this->config['operation']['convert_gif'];
         }
         $this->convertGif = (boolean) $convertGif;
-        $this->host = $this->config['path']['host'];
     }
     
     //Load config
@@ -182,9 +177,9 @@ class Smushit {
         $percent = number_format($percent, 2);
 
         $result = array(
-            'src' => $this->host . $filename,
+            'src' => $filename,
             'src_size' => $src_size,
-            'dest' => $this->host . $dest,
+            'dest' => $dest,
             'dest_size' => $dest_size,
             'percent' => $percent,
         );
