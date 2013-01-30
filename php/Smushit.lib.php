@@ -17,17 +17,7 @@ class Smushit {
      */
 
     function Smushit($conf = false, $convertGif = null) {
-        //Read the default config file
-        if (!$conf) {
-            /*
-             * __FILE__For the current PHP script where the path + file name
-             * dirname(__FILE__)Returns the current PHP script where the path
-             * $conf config file path for the current path + file name
-             */
-            $conf = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.ini';
-        }
-        //To obtain ini file multidimensional array
-        $this->config = parse_ini_file($conf, true);
+        loadConfig($conf);
         //Whether to debug
         $debug = $this->config['debug']['enabled'];
         $this->debug = (strcasecmp($debug, 'yes') == 0);
@@ -39,6 +29,21 @@ class Smushit {
         }
         $this->convertGif = (boolean) $convertGif;
         $this->host = $this->config['path']['host'];
+    }
+    
+    //Load config
+    function loadConfig ($conf = false) {
+        //Read the default config file
+        if (!$conf) {
+            /*
+             * __FILE__For the current PHP script where the path + file name
+             * dirname(__FILE__)Returns the current PHP script where the path
+             * $conf config file path for the current path + file name
+             */
+            $conf = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.ini';
+        }
+        //To obtain ini file multidimensional array
+        $this->config = parse_ini_file($conf, true);
     }
 
     //Create a duplicate files?
