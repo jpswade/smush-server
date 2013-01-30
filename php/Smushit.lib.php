@@ -21,7 +21,6 @@ class Smushit {
         //Whether to debug
         $debug = $this->config['debug']['enabled'];
         $this->debug = (strcasecmp($debug, 'yes') == 0);
-        $this->target = $target;
 
         //this-> convertGif defaults to true
         if ($convertGif === null) {
