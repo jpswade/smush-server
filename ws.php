@@ -9,7 +9,7 @@ $img = urldecode($_GET['img']);
 $fileInfo = $_FILES['files'];
 $prefix = 'smush-';
 $uploadpath = 'upload';
-$uploadpath = 'download';
+$downloadpath = 'download';
 
 /* Logic */
 if (!$img && ($fileInfo == NULL || $fileInfo['error'] != NULL)) {
