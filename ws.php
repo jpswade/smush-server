@@ -4,7 +4,7 @@
 require('Smushit.lib.php');
 
 /* Variables */
-$response = array('id' => null);
+$response = array();
 $img = urldecode($_GET['img']);
 $fileInfo = $_FILES['files'];
 $prefix = 'smush-';
@@ -70,5 +70,7 @@ if (!$img && ($fileInfo == NULL || $fileInfo['error'] != NULL)) {
         }
     }
 }
+$response['id'] = isset($id) ? $id : null;
+header('Content-Type:application/json');
 echo json_encode($response);
 //eof
