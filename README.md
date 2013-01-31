@@ -20,7 +20,7 @@ From there, I could call them from a script to process the images on the fly.
 
 I looked to see if any existing projects were avaliable.
 
-I found quite a few PHP wrappers, that would call the Yahoo Smush.it API, but I
+I found quite a few PHP wrappers, that would call the Yahoo Smushit API, but I
  felt it would be much slower and less reliable than using local software.
 
 Upon closer inspection I discovered that the tools used by Yahoo Smush.it tool
@@ -65,33 +65,65 @@ I forked the project and started cleaning up and redesigning it to work in
  exactly the same way as the original Smush.it API so it would work with
  existing wrappers.
 
-## Conclusion
+## Prerequisite
 
-I soon realised that this was futile due to the following reasons:
+###Make directories
 
-    1. Google does not practice what it preaches.
-        Analyze: https://developers.google.com/speed/pagespeed/
+Upload - for incoming images:
+    mkdir upload
+Results - for outgoing images:
+    mkdir results
 
-        Optimizing the following images could reduce their size by 16.5KiB (38% reduction).
-        Losslessly compressing https://developers.google.com/.../banner-carusel-pagespeed.png could save 10.1KiB (44% reduction). See optimized content
-        Losslessly compressing https://developers.google.com/.../developers-logo.png could save 3.4KiB (50% reduction). See optimized content
-        Losslessly compressing https://developers.google.com/.../google-logo.png could save 1.8KiB (17% reduction). See optimized content
-        Losslessly compressing https://developers.google.com/.../developers-logo-footer.png could save 1.2KiB (60% reduction). See optimized content
+###Linux
 
-    2. The actual smush.it was unable to optimise these images as suggested:
+Install this software:
 
-        https://developers.google.com/speed/images/banner-carusel-pagespeed.png
-        https://developers.google.com/_static/images/developers-logo.png
-        https://developers.google.com/_static/images/google-logo.png
-        https://developers.google.com/_static/images/developers-logo-footer.png
+    sudo yum install -y advancecomp gifsicle libjpeg optipng
 
-        Smush.it did not find any saving of your image(s).
+You will also need to install jpegoptim and pngcrush from source:
 
-Until these issues are addressed, I see no point in continuing this project.
+#### jpegoptim
+    cd /tmp
+    curl -O http://www.kokkonen.net/tjko/src/jpegoptim-1.2.4.tar.gz
+    tar zxf jpegoptim-*.tar.gz
+    cd jpegoptim-*
+    ./configure && make && make install
+#### pngcrush
+    cd /tmp
+    curl -O http://iweb.dl.sourceforge.net/project/pmt/pngcrush/1.7.44/pngcrush-1.7.44.tar.gz
+    tar zxf pngcrush-*.tar.gz
+    cd pngcrush-*
+    make && cp -f pngcrush /usr/local/bin
 
-## Summary
+## Usage
 
-Although I didn't complete what I set out to do, I felt it was a worthwhile
- quest. Perhaps I'll revisit this in the future to finish it.
+Provided is a script called ws.php (as in "Web Service").
 
-Either that, or Yahoo should just open source the project.
+### Examples of usage:
+
+Help message
+* http://smush.it/ws.php
+Smushed response
+* http://smush.it/ws.php?img=http://smush.it/css/skin/screenshot.png
+Image that cannot be further smushed
+* http://smush.it/ws.php?img=http://smush.it/css/skin/logo.png
+
+All responses are in JSON format.
+
+ There are two optional parameters:
+* img - Image you want to smush (required)
+* id - Helps you identify the response if you send requests in a batch (optional)
+* task - Allows you to group together a bunch of images if you want to get the zip file after that. Make that as unique as possible. (optional)
+
+### Example scenario
+
+Uploading two images with the same task identifier:
+
+* http://smush.it/ws.php?task=mytask&img=http://example.org/image1.png
+* http://smush.it/ws.php?task=mytask&img=http://example.org/image2.png
+
+To get the zipped result go to:
+
+* http://smush.it/zip.php?task=mytask
+
+#EOF
