@@ -110,20 +110,20 @@ Image that cannot be further smushed
 
 All responses are in JSON format.
 
- There are two optional parameters:
+These are the parameters:
 * img - Image you want to smush (required)
 * id - Helps you identify the response if you send requests in a batch (optional)
-* task - Allows you to group together a bunch of images if you want to get the zip file after that. Make that as unique as possible. (optional)
+* ~task - Allows you to group together a bunch of images if you want to get the zip file after that. Make that as unique as possible. (optional)~
 
 ### Example scenario
 
-Uploading two images with the same task identifier:
+~Uploading two images with the same task identifier:
 
 * http://www.smushit.com/ysmush.it/ws.php?task=mytask&img=http://example.org/image1.png
 * http://www.smushit.com/ysmush.it/ws.php?task=mytask&img=http://example.org/image2.png
 
 To get the zipped result go to:
 
-* http://www.smushit.com/ysmush.it/zip.php?task=mytask
+* http://www.smushit.com/ysmush.it/zip.php?task=mytask~
 
 #EOF
