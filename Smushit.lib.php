@@ -10,19 +10,19 @@ class Smushit {
         'results' => array('dir' => '%dir%%slash%results%slash%%file%'),
         'debug' => array('enabled' => 'yes'),
         'command' => array(
-            'identify' => 'identify %src%',
-            'convert' => 'convert %src% -quality 70 %dest%',
+            'identify' => '/usr/bin/identify %src%',
+            'convert' => '/usr/bin/convert %src% -quality 70 %dest%',
             'jpegtran' => 'jpegtran -copy none -progressive -outfile %dest% %src%',
-            'gifsicle' => '/usr/local/bin/gifsicle -O2 %src% -o %dest%',
-            'gifsicle_reduce_color' => '/usr/local/bin/gifsicle --colors 256 -O2 %src% > %dest%',
-            'gifcolors' => "/usr/local/bin/gifsicle --color-info %src% | grep  'color table'",
-            'topng' => 'convert %src% %dest%',
-            'topng8' => 'convert %src% PNG8:%dest%',
+            'gifsicle' => '/usr/bin/gifsicle -O2 %src% -o %dest%',
+            'gifsicle_reduce_color' => '/usr/bin/gifsicle--colors 256 -O2 %src% > %dest%',
+            'gifcolors' => "/usr/bin/gifsicle --color-info %src% | grep  'color table'",
+            'topng' => '/usr/bin/convert %src% %dest%',
+            'topng8' => '/usr/bin/convert %src% PNG8:%dest%',
             'pngcrush' => '/usr/local/bin/pngcrush -rem alla -brute -reduce %src% %dest%',
-            'compress' => 'convert -sample %rate% %src% %dest%',
-            'crop' => 'convert %src% -crop %params% %dest%',
-            'env' => array('ua' => 'Smushit'),
+            'compress' => '/usr/bin/convert -sample %rate% %src% %dest%',
+            'crop' => '/usr/bin/convert %src% -crop %params% %dest%'
         ),
+        'env' => array('ua' => 'Smushit'),
         'operation' => array('convert_gif' => true)
     );
     
@@ -207,6 +207,14 @@ class Smushit {
         /*$values = array_values($this->config['path']);
         //Find the value of $find $command, use $this->config ['path'] replace
         $command = str_replace($find, $values, $command);*/
+        
+        /* Check command exists */
+        $command_exec = trim(strtok($command, ' '));
+        $which = shell_exec("which $command_exec");
+        if (!$which) {
+            user_error("Command '$command_exec' does not exist.");
+            die();
+        }
 
         /*
          * Incoming $data parameter instead of the default placeholder in the
@@ -493,7 +501,6 @@ class Smushit {
         }
         return $totalColors;
     }
-
 }
 
 //eof
