@@ -101,12 +101,12 @@ Provided is a script called ws.php (as in "Web Service").
 
 ### Examples of usage:
 
-Help message
-* http://smush.it/ws.php
+Helper message
+* http://www.smushit.com/ysmush.it/ws.php
 Smushed response
-* http://smush.it/ws.php?img=http://smush.it/css/skin/screenshot.png
+* http://www.smushit.com/ysmush.it/ws.php?img=http://www.smushit.com/ysmush.it/css/skin/screenshot.png
 Image that cannot be further smushed
-* http://smush.it/ws.php?img=http://smush.it/css/skin/logo.png
+* http://www.smushit.com/ysmush.it/ws.php?img=http://www.smushit.com/ysmush.it/css/skin/logo.png
 
 All responses are in JSON format.
 
@@ -119,11 +119,11 @@ All responses are in JSON format.
 
 Uploading two images with the same task identifier:
 
-* http://smush.it/ws.php?task=mytask&img=http://example.org/image1.png
-* http://smush.it/ws.php?task=mytask&img=http://example.org/image2.png
+* http://www.smushit.com/ysmush.it/ws.php?task=mytask&img=http://example.org/image1.png
+* http://www.smushit.com/ysmush.it/ws.php?task=mytask&img=http://example.org/image2.png
 
 To get the zipped result go to:
 
-* http://smush.it/zip.php?task=mytask
+* http://www.smushit.com/ysmush.it/zip.php?task=mytask
 
 #EOF
