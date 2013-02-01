@@ -117,13 +117,15 @@ These are the parameters:
 
 ### Example scenario
 
-~~Uploading two images with the same task identifier:
+~~Uploading two images with the same task identifier:~~
 
-* http://www.smushit.com/ysmush.it/ws.php?task=mytask&img=http://example.org/image1.png
-* http://www.smushit.com/ysmush.it/ws.php?task=mytask&img=http://example.org/image2.png
+* ~~http://www.smushit.com/ysmush.it/ws.php?task=mytask&img=http://example.org/image1.png~~
+* ~~http://www.smushit.com/ysmush.it/ws.php?task=mytask&img=http://example.org/image2.png~~
 
-To get the zipped result go to:
+~~To get the zipped result go to:~~
 
-* http://www.smushit.com/ysmush.it/zip.php?task=mytask~~
+* ~~http://www.smushit.com/ysmush.it/zip.php?task=mytask~~
+
+Note: In tests on Yahoo Smush.it this did not work.
 
 #EOF
