@@ -33,7 +33,7 @@ class Smush {
     var $last_status = '';
     var $last_command = '';
     //var $result = array();
-    var $originalsrc = null;
+    var $src = null;
     var $res = null;
     var $dest = null;
 
@@ -172,31 +172,35 @@ class Smush {
                 $dest = $this->crush($filename);
                 break;
             case '':
-                user_error('Cannot determine the type, is this an image?');
-                return false;
+                //user_error('Cannot determine the type, is this an image?');
                 break;
             default:
-                user_error('Cannot do anything about this file type: ' . $type);
+                //user_error("Cannot do anything about this file type: $type");
+        }
+        if ($dest) {
+            //The optimized picture file size
+            //if ($this->debug) echo "dest($dest)";
+            $dest_size = filesize($dest);
+            if (!$dest_size) {
+                user_error('Error writing the optimized file');
                 return false;
+            }
+            //Optimize the size of the percentage
+            $percent = 100 * ($src_size - $dest_size) / $src_size;
+        } else {
+            $error = 'Could not get the image';
         }
-        //The optimized picture file size
-        //if ($this->debug) echo "dest($dest)";
-        $dest_size = filesize($dest);
-        if (!$dest_size) {
-            user_error('Error writing the optimized file');
-            return false;
-        }
-        //Optimize the size of the percentage
-        $percent = 100 * ($src_size - $dest_size) / $src_size;
-        $percent = number_format($percent, 2);
-
         $result = array();
-        $result['src'] = $this->originalsrc ? $this->originalsrc : $filename;
+        $result['src'] = $this->src ? $this->src : $filename;
+        if (isset($error)) {
+            $result['error'] = $error;
+            return;
+        }
         $result['src_size'] = $src_size;
         if ($percent > 0) {
             $result['dest'] = $dest;
             $result['dest_size'] = $dest_size;
-            $result['percent'] = $percent;
+            $result['percent'] = number_format($percent, 2);
         } else {
             unlink($dest);
             $result['error'] = 'No savings';
@@ -304,7 +308,10 @@ class Smush {
             return false;
         }
         //Target png files
-        $dest = str_replace('.gif', '.png', $dest);
+        $pi = pathinfo($dest);
+        $file = isset($pi['filename']) ? $pi['filename'] : $pi['basename'];
+        $path = $pi['dirname'] . DIRECTORY_SEPARATOR;
+        $dest = $path . $file . '.png';
         //Should 'topng'
         $exec_which = $force8 ? 'topng8' : 'topng';
         /*
@@ -573,7 +580,7 @@ class Smush {
             $matches = array();
             preg_match('/^https?:\/\/[\S]+/i', $src, $matches);
             $url = array_shift($matches);
-            $this->originalsrc = $url;
+            $this->src = $url;
             $filename = parse_url($url, PHP_URL_PATH);
             if (!$filename) {
                 $filename = 'image';
