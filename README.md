@@ -126,6 +126,6 @@ These are the parameters:
 
 * ~~http://www.smushit.com/ysmush.it/zip.php?task=mytask~~
 
-Note: In tests on Yahoo Smush.it this did not work.
+Note: In tests on Yahoo Smush.it the "task" variable did not work.
 
 #EOF
