@@ -22,14 +22,20 @@ class Smushit {
             'compress' => '/usr/bin/convert -sample %rate% %src% %dest%',
             'crop' => '/usr/bin/convert %src% -crop %params% %dest%'
         ),
-        'env' => array('ua' => 'Smushit'),
+        'path' => array(
+            'upload' => 'upload',
+            'results' => 'results'),
+        'env' => array('ua' => 'Smushit', 'prefix' => 'smushit'),
         'operation' => array('convert_gif' => true)
     );
-    
-    var $debug = 1;
+    var $debug;
     var $dbg = array();
     var $last_status = '';
     var $last_command = '';
+    //var $result = array();
+    var $originalsrc = null;
+    var $res = null;
+    var $dest = null;
 
     /* Structure
      * Completion of some initialization parameters
@@ -39,6 +45,9 @@ class Smushit {
         if ($conf) {
             loadConfig($conf);
         }
+        // Check paths
+        $this->checkPaths();
+
         //Whether to debug
         $debug = $this->config['debug']['enabled'];
         $this->debug = (strcasecmp($debug, 'yes') == 0);
@@ -49,9 +58,43 @@ class Smushit {
         }
         $this->convertGif = (boolean) $convertGif;
     }
-    
+
+    //Check paths
+    function checkPaths() {
+        $config = & $this->config;
+        //paths
+        if (!isset($config['path']['upload'])) {
+            user_error('Upload path is not set in config.');
+            die();
+        }
+        $uploadpath = $config['path']['upload'] . DIRECTORY_SEPARATOR;
+
+        if (!isset($config['path']['results'])) {
+            user_error('Results path is not set in config.');
+            die();
+        }
+        $resultspath = $config['path']['results'] . DIRECTORY_SEPARATOR;
+        //checks
+        if (!is_dir($uploadpath)) {
+            user_error('Upload path is invalid');
+            die();
+        }
+        if (!is_writeable($uploadpath)) {
+            user_error('Upload path is NOT writable');
+            die();
+        }
+        if (!is_dir($resultspath)) {
+            user_error('Results path is invalid');
+            die();
+        }
+        if (!is_writeable($resultspath)) {
+            user_error('Results path is NOT writable');
+            die();
+        }
+    }
+
     //Load config
-    function loadConfig ($conf) {
+    function loadConfig($conf) {
         //Read the default config file
         if (!file_exists($conf)) {
             /*
@@ -62,7 +105,7 @@ class Smushit {
             $conf = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.ini';
         }
         if (!file_exists($conf)) {
-            return array('error', "Config file '$conf' does not exist.");
+            user_error("Config file '$conf' does not exist.");
             return false;
         }
         //To obtain ini file multidimensional array
@@ -99,11 +142,11 @@ class Smushit {
     function optimize($filename, $output) {
         $this->dest = $output;
         //File Size
+        //if ($this->debug) echo "filename($filename)";
         $src_size = filesize($filename);
         if (!$src_size) {
-            return array(
-                'error' => 'Error reading the input file'
-            );
+            user_error('Error reading the input file');
+            return false;
         }
         //File Type
         $type = $this->getType($filename);
@@ -130,8 +173,8 @@ class Smushit {
                 //Create a png file of the same name
                 $png = $this->toPNG($filename);
                 if (!$png) {
-                    $error = "Failed to convert '$type' file to png format.";
-                    return array('error' => $error);
+                    user_error("Failed to convert '$type' file to png format.");
+                    return false;
                 }
                 //Need to create excessive alternative png image
                 $dest = $this->crush($png, true);
@@ -160,29 +203,36 @@ class Smushit {
                 $dest = $this->crush($filename);
                 break;
             case '':
-                $error = 'Cannot determine the type, is this an image?';
-                return array('error' => $error);
+                user_error('Cannot determine the type, is this an image?');
+                return false;
                 break;
             default:
-                $error = 'Cannot do anythig about this file type:' . $type;
-                return array('error' => $error);
+                user_error('Cannot do anything about this file type: ' . $type);
+                return false;
         }
         //The optimized picture file size
+        //if ($this->debug) echo "dest($dest)";
         $dest_size = filesize($dest);
         if (!$dest_size) {
-            return array('error' => 'Error writing the optimized file');
+            user_error('Error writing the optimized file');
+            return false;
         }
         //Optimize the size of the percentage
         $percent = 100 * ($src_size - $dest_size) / $src_size;
         $percent = number_format($percent, 2);
 
-        $result = array(
-            'src' => $filename,
-            'src_size' => $src_size,
-            'dest' => $dest,
-            'dest_size' => $dest_size,
-            'percent' => $percent,
-        );
+        $result = array();
+        $result['src'] = $this->originalsrc ? $this->originalsrc : $filename;
+        $result['src_size'] = $src_size;
+        if ($percent > 0) {
+            $result['dest'] = $dest;
+            $result['dest_size'] = $dest_size;
+            $result['percent'] = $percent;
+        } else {
+            unlink($dest);
+            $result['error'] = 'No savings';
+            $result['dest_size'] = -1;
+        }
 
         return $result;
     }
@@ -198,16 +248,16 @@ class Smushit {
          * 0 => %test_home%
          * 1 => %user%
          */
-        /*$find = array_keys($this->config['path']);
-        foreach ($find as $k => $v) {
-            $find[$k] = "%$v%";
-        }*/
+        /* $find = array_keys($this->config['path']);
+          foreach ($find as $k => $v) {
+          $find[$k] = "%$v%";
+          } */
         //Get the list of commands in the configuration file
         $command = $this->config['command'][$command_name];
-        /*$values = array_values($this->config['path']);
-        //Find the value of $find $command, use $this->config ['path'] replace
-        $command = str_replace($find, $values, $command);*/
-        
+        /* $values = array_values($this->config['path']);
+          //Find the value of $find $command, use $this->config ['path'] replace
+          $command = str_replace($find, $values, $command); */
+
         /* Check command exists */
         $command_exec = trim(strtok($command, ' '));
         $which = shell_exec("which $command_exec");
@@ -229,9 +279,7 @@ class Smushit {
         $data = array_map('escapeshellarg', $data);
         $command = str_replace($find, $data, $command);
 
-        if ($this->debug) {
-            //error_log($command);
-        }
+        //if ($this->debug) { error_log($command); }
         exec($command, $ret, $status);
         //Status code after execution, command line
         $this->last_status = $status;
@@ -405,38 +453,45 @@ class Smushit {
 
     function copy($src, $dest) {
         if (is_uploaded_file($src)) {
+            //move uploaded file
             move_uploaded_file($src, $dest);
-        }
-        elseif (file_exists($src)) {
+        } elseif (filter_var($src, FILTER_VALIDATE_URL)) {
+            //must be a valid url
+            if (function_exists('curl_init')) {
+                //copy from url (using curl)
+                $ch = curl_init($src);
+                $fp = fopen($dest, 'w');
+                curl_setopt($ch, CURLOPT_FILE, $fp);
+                curl_setopt($ch, CURLOPT_HEADER, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_USERAGENT, $this->config['env']['ua']);
+                curl_exec($ch);
+                $mimetype = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                curl_close($ch);
+                fclose($fp);
+                if (is_null($mimetype) || strncmp($mimetype, 'image/', 6) !== 0) {
+                    // not an image
+                    if (file_exists($dest)) {
+                        unlink($dest);
+                    }
+                    return false;
+                }
+            } else {
+                //copy using wget
+                shell_exec(sprintf('wget -O %s %s 2>&1 1> /dev/null', $file, $url));
+            }
+        } elseif (file_exists($src)) {
+            //copy from file
             copy($src, $dest);
         }
-        elseif (function_exists('curl_init')) {
-            $ch = curl_init($src);
-            $fp = fopen($dest, 'w');
-            curl_setopt($ch, CURLOPT_FILE, $fp);
-            curl_setopt($ch, CURLOPT_HEADER, 0);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_USERAGENT, $this->config['env']['ua']);
-            curl_exec($ch);
-            $mimetype = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-            curl_close($ch);
-            fclose($fp);
-            if (is_null($mimetype) || strncmp($mimetype, 'image/', 6) !== 0) {
-                // not an image
-                if (file_exists($dest)) {
-                    unlink($dest);
-                }
-                return false;
-            }
-        } else {
-            shell_exec(sprintf('wget -O %s %s 2>&1 1> /dev/null', $file, $url));
-        }
-        return file_exists($dest);
+        //return filename
+        return is_file($dest) ? $dest : false;
     }
 
     function getDirectoryListing($dir) {
         if (!is_dir($dir)) {
-            return array('error', 'Not a directory');
+            user_error('Not a directory');
+            return false;
         }
         $files = array();
         if ($dh = opendir($dir)) {
@@ -501,6 +556,86 @@ class Smushit {
         }
         return $totalColors;
     }
+
+    /*
+     * Web service
+     */
+
+    function webservice($img = false, $id = '') {
+        if (!$this->res && $img) {
+            $this->res = $this->upload($img);
+        }
+        if (!$img || !$this->res) {
+            $result['src'] = $img;
+            $result['error'] = 'Could not get the image';
+            return $result;
+        }
+        $src = $this->res;
+        $resultspath = $this->config['path']['results'] . DIRECTORY_SEPARATOR;
+        $dest = $resultspath . basename($this->res);
+        //if ($this->debug) echo "dest($dest)";
+        $result = $this->optimize($src, $dest);
+        if (isset($result['dest'])) {
+            $result['dest'] = $this->getURL($dest);
+        }
+        return $result;
+    }
+
+    /*
+     * Upload function
+     */
+
+    function upload($src = false) {
+        //if it's an array, we only want one.
+        if (is_array($src)) {
+            $src = array_shift($src);
+        }
+        //get path
+        $uploadpath = realpath($this->config['path']['upload']) . DIRECTORY_SEPARATOR;
+        //get prefix
+        $prefix = $this->config['env']['prefix'];
+        //if it's a string, act
+        if ($src && is_string($src)) {
+            //web upload
+            //check for multiple URLS?
+            $matches = array();
+            preg_match('/^https?:\/\/[\S]+/i', $src, $matches);
+            $url = array_shift($matches);
+            $this->originalsrc = $url;
+            $filename = parse_url($url, PHP_URL_PATH);
+            if (!$filename) {
+                $filename = 'image';
+            }
+            if (!strrchr($filename, '.')) {
+                $filename .= '.png';
+            }
+            $hash = hash('crc32b', uniqid());
+            $file = urlencode('/' . $prefix . '/' . $filename);
+            $srcfile = $uploadpath . $hash . $file;
+            //if ($this->debug) echo "copy($url, $srcfile)";
+            $this->res = $this->copy($url, $srcfile);
+        } elseif ($_FILES) {
+            $fileInfo = array_shift($_FILES);
+            $fileTemp = $fileInfo['tmp_name'];
+            $filename = $fileInfo['name'];
+            $hash = hash('crc32b', uniqid());
+            $file = urlencode('/' . $prefix . '/' . $file);
+            $srcfile = $uploadpath . $hash . $file;
+            $this->res = $this->copy($fileTemp, $srcfile);
+        } else {
+            return false;
+        }
+        return $this->res;
+    }
+
+    function getUrl($path = false) {
+        if (isset($_SERVER['HTTP_HOST'])) {
+            $https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off');
+            $url = ($https ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+            return $url . '/' . ltrim($path, '/');
+        }
+    }
+
 }
 
-//eof
+//end
