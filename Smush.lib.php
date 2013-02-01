@@ -45,8 +45,6 @@ class Smush {
         if ($conf) {
             loadConfig($conf);
         }
-        // Check paths
-        $this->checkPaths();
 
         //Whether to debug
         $debug = $this->config['debug']['enabled'];
@@ -57,40 +55,6 @@ class Smush {
             $convertGif = $this->config['operation']['convert_gif'];
         }
         $this->convertGif = (boolean) $convertGif;
-    }
-
-    //Check paths
-    function checkPaths() {
-        $config = & $this->config;
-        //paths
-        if (!isset($config['path']['upload'])) {
-            user_error('Upload path is not set in config.');
-            die();
-        }
-        $uploadpath = $config['path']['upload'] . DIRECTORY_SEPARATOR;
-
-        if (!isset($config['path']['results'])) {
-            user_error('Results path is not set in config.');
-            die();
-        }
-        $resultspath = $config['path']['results'] . DIRECTORY_SEPARATOR;
-        //checks
-        if (!is_dir($uploadpath)) {
-            user_error('Upload path is invalid');
-            die();
-        }
-        if (!is_writeable($uploadpath)) {
-            user_error('Upload path is NOT writable');
-            die();
-        }
-        if (!is_dir($resultspath)) {
-            user_error('Results path is invalid');
-            die();
-        }
-        if (!is_writeable($resultspath)) {
-            user_error('Results path is NOT writable');
-            die();
-        }
     }
 
     //Load config
@@ -586,6 +550,8 @@ class Smush {
      */
 
     function upload($src = false) {
+        // Check paths for uploading
+        $this->checkPaths();
         //if it's an array, we only want one.
         if (is_array($src)) {
             $src = array_shift($src);
@@ -626,6 +592,40 @@ class Smush {
             return false;
         }
         return $this->res;
+    }
+    
+    //Check paths
+    function checkPaths() {
+        $config = & $this->config;
+        //paths
+        if (!isset($config['path']['upload'])) {
+            user_error('Upload path is not set in config.');
+            die();
+        }
+        $uploadpath = $config['path']['upload'] . DIRECTORY_SEPARATOR;
+
+        if (!isset($config['path']['results'])) {
+            user_error('Results path is not set in config.');
+            die();
+        }
+        $resultspath = $config['path']['results'] . DIRECTORY_SEPARATOR;
+        //checks
+        if (!is_dir($uploadpath)) {
+            user_error('Upload path is invalid');
+            die();
+        }
+        if (!is_writeable($uploadpath)) {
+            user_error('Upload path is NOT writable');
+            die();
+        }
+        if (!is_dir($resultspath)) {
+            user_error('Results path is invalid');
+            die();
+        }
+        if (!is_writeable($resultspath)) {
+            user_error('Results path is NOT writable');
+            die();
+        }
     }
 
     function getUrl($path = false) {
