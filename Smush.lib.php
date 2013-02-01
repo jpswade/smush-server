@@ -1,10 +1,10 @@
 <?php
 
 /*
- * Smushit class
+ * Smush class
  */
 
-class Smushit {
+class Smush {
 
     var $config = array(
         'results' => array('dir' => '%dir%%slash%results%slash%%file%'),
@@ -25,7 +25,7 @@ class Smushit {
         'path' => array(
             'upload' => 'upload',
             'results' => 'results'),
-        'env' => array('ua' => 'Smushit', 'prefix' => 'smushit'),
+        'env' => array('ua' => 'Smush', 'prefix' => 'smush'),
         'operation' => array('convert_gif' => true)
     );
     var $debug;
@@ -41,7 +41,7 @@ class Smushit {
      * Completion of some initialization parameters
      */
 
-    function Smushit($conf = false, $convertGif = null) {
+    function Smush($conf = false, $convertGif = null) {
         if ($conf) {
             loadConfig($conf);
         }

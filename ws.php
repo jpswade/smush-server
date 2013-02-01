@@ -12,10 +12,10 @@ $response = array();
 if ($img || $_FILES) {
     if (filter_var($img, FILTER_VALIDATE_URL)) {
         /* Required */
-        require('Smushit.lib.php');
-        $smushit = new Smushit();
-        $response = $smushit->webservice($img, $id);
-        //if ($smushit->dbg) { print_r($smushit->dbg); }   
+        require('Smush.lib.php');
+        $smush = new Smush();
+        $response = $smush->webservice($img, $id);
+        //if ($smush->dbg) { print_r($smush->dbg); }   
         $response['id'] = $id;
     }
 } else {
