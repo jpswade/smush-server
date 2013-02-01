@@ -528,7 +528,7 @@ class Smush {
             $endPos = strpos($retStr, ']');
             $start = $beginPos + 1;
             $length = $endPos - $beginPos - 1;
-            $colorNum = (int) substr($retStr, $start, $lenth);
+            $colorNum = (int) substr($retStr, $start, $length);
             $totalColors += $colorNum;
         }
         return $totalColors;
