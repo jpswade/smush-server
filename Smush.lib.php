@@ -104,9 +104,14 @@ class Smush {
      */
 
     function optimize($filename, $output) {
+        //if ($this->debug) echo "output($output)";
         $this->dest = $output;
         //File Size
         //if ($this->debug) echo "filename($filename)";
+        if (!file_exists($filename)) {
+            user_error('Error reading the input file');
+            return false;
+        }
         $src_size = filesize($filename);
         if (!$src_size) {
             user_error('Error reading the input file');
@@ -240,6 +245,7 @@ class Smush {
         }
 
         //Safe handling
+        //if ($this->debug) { var_dump($data); }
         $data = array_map('escapeshellarg', $data);
         $command = str_replace($find, $data, $command);
 
