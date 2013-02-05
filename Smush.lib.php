@@ -12,7 +12,7 @@ class Smush {
         'command' => array(
             'identify' => '/usr/bin/identify %src%',
             'convert' => '/usr/bin/convert %src% %dest%',
-            'jpegtran' => 'jpegtran -copy none -progressive -outfile %dest% %src%',
+            'jpegtran' => 'jpegtran -optimize -copy none -progressive -outfile %dest% %src%',
             'gifsicle' => '/usr/bin/gifsicle -O2 %src% -o %dest%',
             'gifsicle_reduce_color' => '/usr/bin/gifsicle--colors 256 -O2 %src% > %dest%',
             'gifcolors' => "/usr/bin/gifsicle --color-info %src% | grep  'color table'",
