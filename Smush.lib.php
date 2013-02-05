@@ -11,7 +11,7 @@ class Smush {
         'debug' => array('enabled' => 'yes'),
         'command' => array(
             'identify' => '/usr/bin/identify %src%',
-            'convert' => '/usr/bin/convert %src% -quality 70 %dest%',
+            'convert' => '/usr/bin/convert %src% %dest%',
             'jpegtran' => 'jpegtran -copy none -progressive -outfile %dest% %src%',
             'gifsicle' => '/usr/bin/gifsicle -O2 %src% -o %dest%',
             'gifsicle_reduce_color' => '/usr/bin/gifsicle--colors 256 -O2 %src% > %dest%',
@@ -26,7 +26,7 @@ class Smush {
             'upload' => 'upload',
             'results' => 'results'),
         'env' => array('ua' => 'Smush', 'prefix' => 'smush'),
-        'operation' => array('convert_gif' => true)
+        'operation' => array('convert_gif' => false)
     );
     var $debug;
     var $dbg = array();
@@ -308,10 +308,10 @@ class Smush {
             return false;
         }
         //Target png files
-        $pi = pathinfo($dest);
-        $file = isset($pi['filename']) ? $pi['filename'] : $pi['basename'];
-        $path = $pi['dirname'] . DIRECTORY_SEPARATOR;
-        $dest = $path . $file . '.png';
+        $dest = $filename . '.png';
+        if (file_exists($dest)) {
+            return $dest;
+        }
         //Should 'topng'
         $exec_which = $force8 ? 'topng8' : 'topng';
         /*
@@ -383,7 +383,7 @@ class Smush {
          *  perform the convert command line.
          * Create *. Tmp.jpeg new file
          */
-        $ret = $this->exec('convert', array(
+        /*$ret = $this->exec('convert', array(
             'src' => $filename,
             'dest' => $filename . '.tmp.jpeg'
                 )
@@ -394,6 +394,11 @@ class Smush {
         //New archive copy for the target file
         $ret = $this->exec('jpegtran', array(
             'src' => $filename . '.tmp.jpeg',
+            'dest' => $dest
+                )
+        );*/
+        $ret = $this->exec('jpegtran', array(
+            'src' => $filename,
             'dest' => $dest
                 )
         );
